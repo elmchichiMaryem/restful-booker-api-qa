@@ -1,0 +1,25 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Dépendances Node
+node_modules/
+
+# Rapports générés (publiés comme artefacts par la CI)
+reports/
+
+# Fichiers locaux de l'application Postman
+.postman/
+
+# Système et éditeurs
+.DS_Store
+.vscode/
+.idea/
+
+# Secrets éventuels
+.env
+
+# Dossiers générés par l'application Postman (workspace local)
+postman/globals/

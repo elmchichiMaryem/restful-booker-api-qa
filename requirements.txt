@@ -1,0 +1,5 @@
+# Dépendances Python des tests d'API (versions figées pour des exécutions reproductibles)
+pytest==9.1.1
+requests==2.34.2
+jsonschema==4.26.0
+pytest-html==4.2.0

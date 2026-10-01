@@ -1,0 +1,13 @@
+{
+  "name": "restful-booker-api-qa",
+  "version": "1.0.0",
+  "description": "Projet portfolio de test d'API sur Restful Booker : collection Postman exécutée avec Newman",
+  "private": true,
+  "scripts": {},
+  "author": "Maryem Elmchichi",
+  "license": "MIT",
+  "devDependencies": {
+    "newman": "6.2.2",
+    "newman-reporter-htmlextra": "1.23.1"
+  }
+}
