@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Projet portfolio de test d'API sur Restful Booker : collection Postman exécutée avec Newman",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "test:postman": "newman run postman/restful-booker.postman_collection.json -e postman/restful-booker.postman_environment.json --delay-request 300 --timeout-request 30000 -r cli,htmlextra --reporter-htmlextra-export reports/newman/rapport-newman.html --reporter-htmlextra-title \"Restful Booker — Rapport Newman\" --reporter-htmlextra-browserTitle \"Rapport Newman\""
+  },
   "author": "Maryem Elmchichi",
   "license": "MIT",
   "devDependencies": {

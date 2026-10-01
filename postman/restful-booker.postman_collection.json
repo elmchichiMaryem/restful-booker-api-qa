@@ -1,0 +1,2942 @@
+{
+  "info": {
+    "_postman_id": "ff78ed65-ff49-5807-99c4-35fecbc25291",
+    "name": "Restful Booker — Tests d'API",
+    "description": "Collection de tests de l'API Restful Booker (https://restful-booker.herokuapp.com).\n\n**Exécution** : lancer la collection entière, dans l'ordre, avec l'environnement « Restful Booker — Démo ». Le jeton et les identifiants de réservation sont enregistrés dans des variables de collection et réutilisés par les requêtes suivantes.\n\n**Données isolées** : chaque dossier crée ses propres réservations (prénom unique) et les supprime à la fin.\n\n**Anomalies connues** : les tests préfixés `[BUG-xx — anomalie connue]` vérifient le comportement *attendu*. Ils réussissent tant que l'anomalie est présente et échouent dès qu'elle est corrigée, pour signaler qu'il faut mettre à jour la collection. Voir docs/qa/03_rapports_anomalies.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Test commun à toutes les requêtes : temps de réponse sous le seuil défini dans l'environnement",
+          "const seuil = Number(pm.environment.get(\"maxResponseTime\") || 3000);",
+          "pm.test(`Temps de réponse < ${seuil} ms`, () => pm.expect(pm.response.responseTime).to.be.below(seuil));"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "schemaJeton",
+      "value": "{\"type\": \"object\", \"required\": [\"token\"], \"additionalProperties\": false, \"properties\": {\"token\": {\"type\": \"string\", \"minLength\": 1}}}",
+      "type": "string",
+      "description": "Schéma JSON utilisé pour la validation de contrat"
+    },
+    {
+      "key": "schemaReservation",
+      "value": "{\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"firstname\", \"lastname\", \"totalprice\", \"depositpaid\", \"bookingdates\", \"additionalneeds\"], \"properties\": {\"firstname\": {\"type\": \"string\"}, \"lastname\": {\"type\": \"string\"}, \"totalprice\": {\"type\": \"number\"}, \"depositpaid\": {\"type\": \"boolean\"}, \"bookingdates\": {\"type\": \"object\", \"required\": [\"checkin\", \"checkout\"], \"additionalProperties\": false, \"properties\": {\"checkin\": {\"type\": \"string\", \"pattern\": \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$\"}, \"checkout\": {\"type\": \"string\", \"pattern\": \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$\"}}}, \"additionalneeds\": {\"type\": \"string\"}}}",
+      "type": "string",
+      "description": "Schéma JSON utilisé pour la validation de contrat"
+    },
+    {
+      "key": "schemaReservationCreee",
+      "value": "{\"type\": \"object\", \"required\": [\"bookingid\", \"booking\"], \"additionalProperties\": false, \"properties\": {\"bookingid\": {\"type\": \"integer\"}, \"booking\": {\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"firstname\", \"lastname\", \"totalprice\", \"depositpaid\", \"bookingdates\", \"additionalneeds\"], \"properties\": {\"firstname\": {\"type\": \"string\"}, \"lastname\": {\"type\": \"string\"}, \"totalprice\": {\"type\": \"number\"}, \"depositpaid\": {\"type\": \"boolean\"}, \"bookingdates\": {\"type\": \"object\", \"required\": [\"checkin\", \"checkout\"], \"additionalProperties\": false, \"properties\": {\"checkin\": {\"type\": \"string\", \"pattern\": \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$\"}, \"checkout\": {\"type\": \"string\", \"pattern\": \"^\\\\d{4}-\\\\d{2}-\\\\d{2}$\"}}}, \"additionalneeds\": {\"type\": \"string\"}}}}}",
+      "type": "string",
+      "description": "Schéma JSON utilisé pour la validation de contrat"
+    },
+    {
+      "key": "schemaListeIds",
+      "value": "{\"type\": \"array\", \"items\": {\"type\": \"object\", \"required\": [\"bookingid\"], \"additionalProperties\": false, \"properties\": {\"bookingid\": {\"type\": \"integer\"}}}}",
+      "type": "string",
+      "description": "Schéma JSON utilisé pour la validation de contrat"
+    },
+    {
+      "key": "jetonInvalide",
+      "value": "jetonInvalide123",
+      "type": "string"
+    },
+    {
+      "key": "motDePasseInvalide",
+      "value": "mauvaisMotDePasse",
+      "type": "string"
+    },
+    {
+      "key": "idInexistant",
+      "value": "999999999",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prenomCrud",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nomCrud",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationCrud",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingIdBasic",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationBasic",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prenomFiltre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nomFiltre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingIdFiltre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationFiltre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prenomNeg",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nomNeg",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingIdNeg",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservationNeg",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentification",
+      "description": "Disponibilité de l'API et obtention du jeton (US-01, US-02).",
+      "item": [
+        {
+          "name": "Vérifier la disponibilité de l'API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Corps de réponse : Created\", () => pm.expect(pm.response.text()).to.eql(\"Created\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ping"
+              ]
+            },
+            "description": "US-01 · CT-01 — Contrôle de santé."
+          }
+        },
+        {
+          "name": "Créer un jeton d'authentification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaJeton)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaJeton\")));",
+                  "});",
+                  "pm.test(\"Le jeton est une chaîne non vide\", () => pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty);",
+                  "pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "US-02 · CT-02 — Le jeton est enregistré dans la variable `token`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Réservations — CRUD",
+      "description": "Parcours complet : créer → lire → lister → modifier → supprimer (US-03 à US-05, US-08 à US-10).",
+      "item": [
+        {
+          "name": "Créer une réservation",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Prénom et nom uniques : nos données ne se mélangent pas à celles des autres utilisateurs de l'API",
+                  "const suffixe = Date.now().toString(36) + Math.floor(Math.random() * 1e4);",
+                  "pm.collectionVariables.set(\"prenomCrud\", \"Crud\" + suffixe);",
+                  "pm.collectionVariables.set(\"nomCrud\", \"Postman\" + suffixe);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservationCreee)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservationCreee\")));",
+                  "});",
+                  "const corps = pm.response.json();",
+                  "pm.test(\"La réservation renvoyée correspond aux données envoyées\", () => {",
+                  "    pm.expect(corps.booking).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingId\", corps.bookingid);",
+                  "pm.collectionVariables.set(\"reservationCrud\", JSON.stringify(corps.booking));",
+                  "pm.test(\"bookingid est un entier\", () => pm.expect(Number.isInteger(corps.bookingid)).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-06 — L'identifiant est enregistré dans `bookingId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomCrud}}\",\n  \"lastname\": \"{{nomCrud}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Lire la réservation créée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservation)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservation\")));",
+                  "});",
+                  "pm.test(\"Les données correspondent à la dernière version enregistrée\", () => {",
+                  "    pm.expect(pm.response.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationCrud\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-04 · CT-07, CT-24."
+          }
+        },
+        {
+          "name": "Lister les réservations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat contient la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"bookingId\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-05 · CT-26."
+          }
+        },
+        {
+          "name": "Modifier entièrement la réservation (jeton)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservation)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservation\")));",
+                  "});",
+                  "pm.test(\"La réponse contient les valeurs envoyées\", () => {",
+                  "    pm.expect(pm.response.json()).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"reservationCrud\", JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-08 · CT-34 — Authentification par jeton en cookie.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomCrud}}Modifie\",\n  \"lastname\": \"{{nomCrud}}\",\n  \"totalprice\": 200,\n  \"depositpaid\": false,\n  \"bookingdates\": {\n    \"checkin\": \"2026-12-01\",\n    \"checkout\": \"2026-12-04\"\n  },\n  \"additionalneeds\": \"Dîner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier entièrement la réservation (Basic Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservation)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservation\")));",
+                  "});",
+                  "pm.test(\"La réponse contient les valeurs envoyées\", () => {",
+                  "    pm.expect(pm.response.json()).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"reservationCrud\", JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-08 · CT-35 — Authentification Basic.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomCrud}}\",\n  \"lastname\": \"{{nomCrud}}\",\n  \"totalprice\": 180,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Parking\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modifier partiellement la réservation (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservation)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservation\")));",
+                  "});",
+                  "pm.test(\"Seul additionalneeds est modifié\", () => {",
+                  "    const attendu = { ...JSON.parse(pm.collectionVariables.get(\"reservationCrud\")), additionalneeds: \"Vue sur mer\" };",
+                  "    pm.expect(pm.response.json()).to.eql(attendu);",
+                  "});",
+                  "pm.collectionVariables.set(\"reservationCrud\", JSON.stringify(pm.response.json()));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-09 · CT-38 — Seul le champ envoyé doit changer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"additionalneeds\": \"Vue sur mer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Relire la réservation modifiée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservation)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservation\")));",
+                  "});",
+                  "pm.test(\"Les données correspondent à la dernière version enregistrée\", () => {",
+                  "    pm.expect(pm.response.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationCrud\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-08, US-09 — Persistance des modifications."
+          }
+        },
+        {
+          "name": "Supprimer la réservation (jeton)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Corps de réponse : Created\", () => pm.expect(pm.response.text()).to.eql(\"Created\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-10 · CT-48 — Code 201 documenté par l'API."
+          }
+        },
+        {
+          "name": "Vérifier que la réservation supprimée est introuvable",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingId}}"
+              ]
+            },
+            "description": "US-10 · CT-48 — Suppression effective."
+          }
+        },
+        {
+          "name": "Créer une réservation à supprimer par Basic Auth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservationCreee)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservationCreee\")));",
+                  "});",
+                  "const corps = pm.response.json();",
+                  "pm.test(\"La réservation renvoyée correspond aux données envoyées\", () => {",
+                  "    pm.expect(corps.booking).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingIdBasic\", corps.bookingid);",
+                  "pm.collectionVariables.set(\"reservationBasic\", JSON.stringify(corps.booking));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 — Données dédiées au test suivant.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomCrud}}Basic\",\n  \"lastname\": \"{{nomCrud}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer la réservation (Basic Auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 201\", () => pm.response.to.have.status(201));",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdBasic\")}`,",
+                  "    method: \"GET\"",
+                  "}, (err, res) => pm.test(\"La réservation supprimée est introuvable (404)\", () => pm.expect(res.code).to.eql(404)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdBasic}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdBasic}}"
+              ]
+            },
+            "description": "US-10 · CT-50.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filtres",
+      "description": "Recherche par nom et par dates (US-06, US-07). Les filtres de dates sont combinés au prénom unique pour isoler les données.",
+      "item": [
+        {
+          "name": "Préparation — créer la réservation de test des filtres",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Prénom et nom uniques : nos données ne se mélangent pas à celles des autres utilisateurs de l'API",
+                  "const suffixe = Date.now().toString(36) + Math.floor(Math.random() * 1e4);",
+                  "pm.collectionVariables.set(\"prenomFiltre\", \"Filtre\" + suffixe);",
+                  "pm.collectionVariables.set(\"nomFiltre\", \"Postman\" + suffixe);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservationCreee)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservationCreee\")));",
+                  "});",
+                  "const corps = pm.response.json();",
+                  "pm.test(\"La réservation renvoyée correspond aux données envoyées\", () => {",
+                  "    pm.expect(corps.booking).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingIdFiltre\", corps.bookingid);",
+                  "pm.collectionVariables.set(\"reservationFiltre\", JSON.stringify(corps.booking));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Réservation du 01/11/2026 au 05/11/2026, au prénom unique.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomFiltre}}\",\n  \"lastname\": \"{{nomFiltre}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Filtrer par prénom et nom",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat contient la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"bookingIdFiltre\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&lastname={{nomFiltre}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "lastname",
+                  "value": "{{nomFiltre}}"
+                }
+              ]
+            },
+            "description": "US-06 · CT-27."
+          }
+        },
+        {
+          "name": "Filtrer par prénom",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat contient la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"bookingIdFiltre\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                }
+              ]
+            },
+            "description": "US-06 · CT-28."
+          }
+        },
+        {
+          "name": "Filtrer par un prénom inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat est un tableau vide\", () => pm.expect(pm.response.json()).to.eql([]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname=Inexistant{{prenomFiltre}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "Inexistant{{prenomFiltre}}"
+                }
+              ]
+            },
+            "description": "US-06 · CT-29."
+          }
+        },
+        {
+          "name": "Filtrer par date d'arrivée — veille de l'arrivée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat contient la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"bookingIdFiltre\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkin=2026-10-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkin",
+                  "value": "2026-10-31"
+                }
+              ]
+            },
+            "description": "US-07 · CT-31 — 01/11 ≥ 31/10."
+          }
+        },
+        {
+          "name": "[BUG-12] Filtrer par date d'arrivée — jour de l'arrivée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"[BUG-12 — anomalie connue] La réservation devrait être renvoyée (arrivée ≥ date du filtre)\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    const attenduRespecte = ids.includes(Number(pm.collectionVariables.get(\"bookingIdFiltre\"))) === true;",
+                  "    pm.expect(attenduRespecte, \"BUG-12 semble corrigé : retirer le marquage d'anomalie connue\").to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkin=2026-11-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkin",
+                  "value": "2026-11-01"
+                }
+              ]
+            },
+            "description": "US-07 · CT-30 — Attendu : renvoyée (01/11 ≥ 01/11)."
+          }
+        },
+        {
+          "name": "Filtrer par date d'arrivée — lendemain de l'arrivée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat ne contient pas la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).not.to.include(Number(pm.collectionVariables.get(\"bookingIdFiltre\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkin=2026-11-02",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkin",
+                  "value": "2026-11-02"
+                }
+              ]
+            },
+            "description": "US-07 · CT-53 — 01/11 < 02/11."
+          }
+        },
+        {
+          "name": "Filtrer par date de départ — jour du départ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"Le résultat contient la réservation de test\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"bookingIdFiltre\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkout=2026-11-05",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkout",
+                  "value": "2026-11-05"
+                }
+              ]
+            },
+            "description": "US-07 · CT-32 — 05/11 ≥ 05/11."
+          }
+        },
+        {
+          "name": "[BUG-13] Filtrer par date de départ — veille du départ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"[BUG-13 — anomalie connue] La réservation devrait être renvoyée (départ ≥ date du filtre)\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    const attenduRespecte = ids.includes(Number(pm.collectionVariables.get(\"bookingIdFiltre\"))) === true;",
+                  "    pm.expect(attenduRespecte, \"BUG-13 semble corrigé : retirer le marquage d'anomalie connue\").to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkout=2026-11-04",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkout",
+                  "value": "2026-11-04"
+                }
+              ]
+            },
+            "description": "US-07 · CT-51 — Attendu : renvoyée (05/11 ≥ 04/11)."
+          }
+        },
+        {
+          "name": "[BUG-13] Filtrer par date de départ — lendemain du départ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaListeIds)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaListeIds\")));",
+                  "});",
+                  "pm.test(\"[BUG-13 — anomalie connue] La réservation ne devrait pas être renvoyée (départ < date du filtre)\", () => {",
+                  "    const ids = pm.response.json().map(r => r.bookingid);",
+                  "    const attenduRespecte = ids.includes(Number(pm.collectionVariables.get(\"bookingIdFiltre\"))) === false;",
+                  "    pm.expect(attenduRespecte, \"BUG-13 semble corrigé : retirer le marquage d'anomalie connue\").to.be.false;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkout=2026-11-06",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "{{prenomFiltre}}"
+                },
+                {
+                  "key": "checkout",
+                  "value": "2026-11-06"
+                }
+              ]
+            },
+            "description": "US-07 · CT-52 — Attendu : non renvoyée (05/11 < 06/11)."
+          }
+        },
+        {
+          "name": "Nettoyage — supprimer la réservation de test des filtres",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdFiltre}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdFiltre}}"
+              ]
+            },
+            "description": "Suppression des données de test."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cas négatifs",
+      "description": "Entrées invalides, ressources inexistantes et contrôle d'accès (US-02 à US-04, US-07 à US-12).",
+      "item": [
+        {
+          "name": "Préparation — créer la réservation des cas négatifs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Prénom et nom uniques : nos données ne se mélangent pas à celles des autres utilisateurs de l'API",
+                  "const suffixe = Date.now().toString(36) + Math.floor(Math.random() * 1e4);",
+                  "pm.collectionVariables.set(\"prenomNeg\", \"Negatif\" + suffixe);",
+                  "pm.collectionVariables.set(\"nomNeg\", \"Postman\" + suffixe);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Schéma JSON valide (schemaReservationCreee)\", () => {",
+                  "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaReservationCreee\")));",
+                  "});",
+                  "const corps = pm.response.json();",
+                  "pm.test(\"La réservation renvoyée correspond aux données envoyées\", () => {",
+                  "    pm.expect(corps.booking).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));",
+                  "});",
+                  "pm.collectionVariables.set(\"bookingIdNeg\", corps.bookingid);",
+                  "pm.collectionVariables.set(\"reservationNeg\", JSON.stringify(corps.booking));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Réservation utilisée par les tests de sécurité.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-01] Jeton — mot de passe incorrect",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Aucun jeton n'est délivré\", () => pm.expect(pm.response.json()).to.not.have.property(\"token\"));",
+                  "pm.test(`[BUG-01 — anomalie connue] Code HTTP attendu 401 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-01 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "US-02 · CT-03 — Attendu : 401 sans jeton.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{motDePasseInvalide}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-01] Jeton — corps vide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Aucun jeton n'est délivré\", () => pm.expect(pm.response.json()).to.not.have.property(\"token\"));",
+                  "pm.test(`[BUG-01 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-01 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "US-02 · CT-04 — Attendu : 400 sans jeton.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-02] Création — sans firstname",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-02 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-02 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-08 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-02] Création — sans bookingdates",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-02 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-02 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-12 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-02] Création — firstname numérique",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-02 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-02 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-15 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": 123,\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-03] Création — totalprice non numérique",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-03 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-03 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-14 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": \"cent\",\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-04] Création — depositpaid en chaîne \"false\"",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-04 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-04 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-16 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": \"false\",\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-05] Création — départ avant l'arrivée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-05 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-05 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-17 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-10\",\n    \"checkout\": \"2026-11-01\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-06] Création — date au format invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-06 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-06 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-19 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"pas-une-date\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-07] Création — date inexistante (30 février)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-07 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-07 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-20 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-02-30\",\n    \"checkout\": \"2026-03-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-08] Création — prix négatif",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-08 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-08 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-21 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": -50,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-09] Création — prénom vide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-09 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-09 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-22 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-10] Création — sans additionalneeds",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-10 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-10 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-03 · CT-13 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Création — JSON mal formé",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Corps de réponse : Bad Request\", () => pm.expect(pm.response.text()).to.eql(\"Bad Request\"));",
+                  "// Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)",
+                  "let corpsCree = null;",
+                  "try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }",
+                  "if (corpsCree && corpsCree.bookingid) {",
+                  "    pm.sendRequest({",
+                  "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
+                  "        method: \"DELETE\",",
+                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "    }, (err, res) => {",
+                  "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "US-12 · CT-23.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"firstname\": \"{{prenomNeg}}\",",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Lecture — réservation inexistante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Corps de réponse : Not Found\", () => pm.expect(pm.response.text()).to.eql(\"Not Found\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{idInexistant}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{idInexistant}}"
+              ]
+            },
+            "description": "US-04 · CT-25."
+          }
+        },
+        {
+          "name": "[BUG-11] Recherche — date d'arrivée invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-11 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-11 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking?checkin=date-invalide",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "checkin",
+                  "value": "date-invalide"
+                }
+              ]
+            },
+            "description": "US-07 · CT-33 — Attendu : 400."
+          }
+        },
+        {
+          "name": "Sécurité — PUT sans authentification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-41 — Attendu : 403, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Pirate\",\n  \"lastname\": \"Pirate\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sécurité — PUT avec un jeton invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{jetonInvalide}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-42 — Attendu : 403, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Pirate\",\n  \"lastname\": \"Pirate\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sécurité — PUT avec Basic Auth invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-43 — Attendu : 403, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Pirate\",\n  \"lastname\": \"Pirate\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{motDePasseInvalide}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sécurité — PATCH sans authentification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-44 — Attendu : 403, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Pirate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sécurité — PATCH avec un jeton invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{jetonInvalide}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-45 — Attendu : 403, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Pirate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sécurité — DELETE sans authentification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-46 — Attendu : 403, réservation inchangée.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Sécurité — DELETE avec un jeton invalide",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Corps de réponse : Forbidden\", () => pm.expect(pm.response.text()).to.eql(\"Forbidden\"));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{jetonInvalide}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-11 · CT-47 — Attendu : 403, réservation inchangée.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Modification — PUT avec corps incomplet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 400\", () => pm.response.to.have.status(400));",
+                  "// Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée",
+                  "pm.sendRequest({",
+                  "    url: `${pm.environment.get(\"baseUrl\")}/booking/${pm.collectionVariables.get(\"bookingIdNeg\")}`,",
+                  "    method: \"GET\",",
+                  "    header: { Accept: \"application/json\" }",
+                  "}, (err, res) => {",
+                  "    pm.test(\"La réservation est inchangée\", () => {",
+                  "        pm.expect(res.code).to.eql(200);",
+                  "        pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get(\"reservationNeg\")));",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-08 · CT-37 — Attendu : 400, réservation inchangée.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-05] Modification partielle — départ avant l'arrivée",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-05 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-05 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "US-09 · CT-40 — Attendu : 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-10\",\n    \"checkout\": \"2026-11-01\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-14] Modification — PUT sur une réservation inexistante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-14 — anomalie connue] Code HTTP attendu 404 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-14 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{idInexistant}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{idInexistant}}"
+              ]
+            },
+            "description": "US-08 · CT-36 — Attendu : 404.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"{{prenomNeg}}\",\n  \"lastname\": \"{{nomNeg}}\",\n  \"totalprice\": 150,\n  \"depositpaid\": true,\n  \"bookingdates\": {\n    \"checkin\": \"2026-11-01\",\n    \"checkout\": \"2026-11-05\"\n  },\n  \"additionalneeds\": \"Petit-déjeuner\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-14] Modification partielle — PATCH sur une réservation inexistante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-14 — anomalie connue] Code HTTP attendu 404 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-14 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{idInexistant}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{idInexistant}}"
+              ]
+            },
+            "description": "US-09 · CT-39 — Attendu : 404.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"X\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "[BUG-14] Suppression — réservation inexistante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(`[BUG-14 — anomalie connue] Code HTTP attendu 404 (obtenu : ${pm.response.code})`, () => {",
+                  "    pm.expect(pm.response.code, \"BUG-14 semble corrigé : retirer le marquage d'anomalie connue\").to.not.eql(404);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{idInexistant}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{idInexistant}}"
+              ]
+            },
+            "description": "US-10 · CT-49 — Attendu : 404."
+          }
+        },
+        {
+          "name": "Nettoyage — supprimer la réservation des cas négatifs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Code HTTP 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "booking",
+                "{{bookingIdNeg}}"
+              ]
+            },
+            "description": "Suppression des données de test."
+          }
+        }
+      ]
+    }
+  ]
+}
