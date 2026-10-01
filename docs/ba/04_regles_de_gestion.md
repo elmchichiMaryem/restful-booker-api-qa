@@ -10,7 +10,7 @@ la façon dont elle est implémentée. Chaque règle indique sa **source** :
 | **Bonne pratique REST** | Non documentée ; on retient le comportement HTTP usuel (voir hypothèse H3) |
 
 La colonne « Constat d'analyse » renvoie aux observations du tableau §5 de
-[02_analyse_api.md](02_analyse_api.md). La vérification formelle a lieu en Phase 2.
+[02_analyse_api.md](02_analyse_api.md). La vérification formelle est faite en Phase 2 ([cas de test](../qa/02_cas_de_test.md)).
 
 ---
 
@@ -22,7 +22,7 @@ La colonne « Constat d'analyse » renvoie aux observations du tableau §5 de
 | RG-02 | Données | `firstname` et `lastname` sont des chaînes de caractères non vides | Documentée (type) + Hypothèse métier (non vide) | US-03, US-08 | ⚠️ obs. 16 |
 | RG-03 | Données | `totalprice` est un nombre | Documentée | US-03, US-08 | ⚠️ obs. 17 |
 | RG-04 | Données | `totalprice` est positif ou nul | Hypothèse métier | US-03, US-08 | ⚠️ obs. 20 |
-| RG-05 | Données | `depositpaid` est un booléen | Documentée | US-03, US-08 | À vérifier |
+| RG-05 | Données | `depositpaid` est un booléen | Documentée | US-03, US-08 | ⚠️ BUG-04 (Phase 2) |
 | RG-06 | Dates | `checkin` et `checkout` sont des dates valides au format `AAAA-MM-JJ` | Documentée | US-03, US-08 | ⚠️ obs. 19 |
 | RG-07 | Dates | La date de départ est strictement postérieure à la date d'arrivée | Hypothèse métier | US-03, US-08 | ⚠️ obs. 18 |
 | RG-08 | Modification | Une modification partielle ne change que les champs fournis | Documentée | US-09 | ✅ obs. 26 |
@@ -34,11 +34,11 @@ La colonne « Constat d'analyse » renvoie aux observations du tableau §5 de
 | RG-14 | Cycle de vie | Chaque réservation créée reçoit un identifiant unique attribué par le système | Documentée | US-03 | ✅ |
 | RG-15 | Exploitation | L'API expose un contrôle de santé répondant 201 | Documentée | US-01 | ✅ obs. 1 |
 | RG-16 | Recherche | Les filtres `firstname` et `lastname` renvoient les réservations correspondantes ; combinés, ils se cumulent (ET logique) | Documentée | US-06 | ✅ obs. 6, 7 |
-| RG-17 | Recherche | Les filtres `checkin` et `checkout` renvoient les réservations dont la date est supérieure ou égale à la date fournie | Documentée | US-07 | À vérifier |
+| RG-17 | Recherche | Les filtres `checkin` et `checkout` renvoient les réservations dont la date est supérieure ou égale à la date fournie | Documentée | US-07 | ⚠️ BUG-11, BUG-12, BUG-13 (Phase 2) |
 | RG-18 | Erreurs | Une requête invalide reçoit une erreur client (4xx), jamais une erreur serveur (5xx) | Bonne pratique REST | US-12 | ⚠️ obs. 8, 13, 14, 16 |
 
-Légende : ✅ conforme lors de l'analyse · ⚠️ écart constaté, à qualifier en Phase 2 ·
-« À vérifier » : pas encore observé.
+Légende : ✅ conforme lors de l'analyse · ⚠️ écart constaté. Les anomalies qualifiées
+(BUG-xx) sont détaillées dans [03_rapports_anomalies.md](../qa/03_rapports_anomalies.md).
 
 ---
 
