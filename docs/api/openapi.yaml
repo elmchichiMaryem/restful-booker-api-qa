@@ -1,0 +1,391 @@
+openapi: 3.0.3
+info:
+  title: Restful Booker
+  version: 1.0.0
+  description: |
+    API de démonstration de réservations hôtelières.
+
+    Cette spécification décrit l'API **telle qu'elle est documentée** dans la documentation
+    officielle (https://restful-booker.herokuapp.com/apidoc/index.html). La documentation ne
+    décrit aucun code d'erreur ; les codes d'erreur ajoutés ici sont signalés par
+    « (observé) ». Les écarts entre documentation et comportement réel sont analysés dans
+    `docs/ba/02_analyse_api.md` et `docs/qa/03_rapports_anomalies.md`.
+
+    Seul le format JSON est décrit. Les formats XML et URL-encoded, documentés mais hors
+    périmètre du projet, ne sont pas modélisés.
+  contact:
+    name: Maryem Elmchichi
+    url: https://github.com/elmchichiMaryem
+externalDocs:
+  description: Documentation officielle de l'API
+  url: https://restful-booker.herokuapp.com/apidoc/index.html
+servers:
+  - url: https://restful-booker.herokuapp.com
+    description: Environnement public de démonstration (partagé)
+tags:
+  - name: Ping
+    description: Disponibilité de l'API
+  - name: Auth
+    description: Obtention d'un jeton d'authentification
+  - name: Booking
+    description: Gestion des réservations
+
+paths:
+  /ping:
+    get:
+      tags: [Ping]
+      operationId: healthCheck
+      security: []
+      summary: Vérifier que l'API est disponible
+      responses:
+        '201':
+          description: API disponible
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Created
+
+  /auth:
+    post:
+      tags: [Auth]
+      operationId: createToken
+      security: []
+      summary: Créer un jeton d'authentification
+      description: Le jeton donne accès aux opérations PUT, PATCH et DELETE sur /booking/{id}.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+            example:
+              username: admin
+              password: password123
+      responses:
+        '200':
+          description: Jeton créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                token: abc123
+
+  /booking:
+    get:
+      tags: [Booking]
+      operationId: getBookingIds
+      security: []
+      summary: Lister les identifiants de réservation
+      description: |
+        Renvoie les identifiants de toutes les réservations. Les paramètres optionnels
+        permettent de filtrer le résultat ; ils sont cumulables.
+      parameters:
+        - name: firstname
+          in: query
+          required: false
+          description: Réservations ayant ce prénom
+          schema:
+            type: string
+          example: sally
+        - name: lastname
+          in: query
+          required: false
+          description: Réservations ayant ce nom
+          schema:
+            type: string
+          example: brown
+        - name: checkin
+          in: query
+          required: false
+          description: Réservations dont la date d'arrivée est supérieure ou égale à cette date (format CCYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: '2014-03-13'
+        - name: checkout
+          in: query
+          required: false
+          description: Réservations dont la date de départ est supérieure ou égale à cette date (format CCYY-MM-DD)
+          schema:
+            type: string
+            format: date
+          example: '2014-05-21'
+      responses:
+        '200':
+          description: Liste des identifiants correspondant aux critères
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingId'
+              example:
+                - bookingid: 1
+                - bookingid: 2
+    post:
+      tags: [Booking]
+      operationId: createBooking
+      security: []
+      summary: Créer une réservation
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+            example:
+              firstname: Jim
+              lastname: Brown
+              totalprice: 111
+              depositpaid: true
+              bookingdates:
+                checkin: '2018-01-01'
+                checkout: '2019-01-01'
+              additionalneeds: Breakfast
+      responses:
+        '200':
+          description: Réservation créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedBooking'
+
+  /booking/{id}:
+    parameters:
+      - $ref: '#/components/parameters/BookingIdPath'
+    get:
+      tags: [Booking]
+      operationId: getBooking
+      security: []
+      summary: Lire une réservation
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+      responses:
+        '200':
+          description: Réservation trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Booking]
+      operationId: updateBooking
+      summary: Remplacer entièrement une réservation
+      security:
+        - tokenCookie: []
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+      responses:
+        '200':
+          description: Réservation mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      tags: [Booking]
+      operationId: partialUpdateBooking
+      summary: Modifier partiellement une réservation
+      security:
+        - tokenCookie: []
+        - basicAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartialBooking'
+            example:
+              firstname: James
+              lastname: Brown
+      responses:
+        '200':
+          description: Réservation mise à jour (objet complet)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Booking]
+      operationId: deleteBooking
+      summary: Supprimer une réservation
+      security:
+        - tokenCookie: []
+        - basicAuth: []
+      responses:
+        '201':
+          description: Réservation supprimée (code documenté par l'API)
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    tokenCookie:
+      type: apiKey
+      in: cookie
+      name: token
+      description: "Jeton obtenu via POST /auth, envoyé dans l'en-tête Cookie (token=<jeton>)"
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Identifiants de démonstration admin / password123 encodés en Base64
+
+  parameters:
+    BookingIdPath:
+      name: id
+      in: path
+      required: true
+      description: Identifiant de la réservation
+      schema:
+        type: integer
+      example: 1
+    Accept:
+      name: Accept
+      in: header
+      required: true
+      description: Format de la réponse (application/json ou application/xml)
+      schema:
+        type: string
+        enum: [application/json, application/xml]
+        default: application/json
+
+  responses:
+    NotFound:
+      description: (observé) Réservation inexistante
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Not Found
+    Forbidden:
+      description: (observé) Authentification absente ou invalide
+      content:
+        text/plain:
+          schema:
+            type: string
+            example: Forbidden
+
+  schemas:
+    AuthRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          format: password
+          example: password123
+    AuthResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: Jeton à utiliser dans les requêtes suivantes
+          example: abc123
+    BookingId:
+      type: object
+      required: [bookingid]
+      properties:
+        bookingid:
+          type: integer
+          example: 1
+    BookingDates:
+      type: object
+      required: [checkin, checkout]
+      properties:
+        checkin:
+          type: string
+          format: date
+          description: Date d'arrivée
+          example: '2018-01-01'
+        checkout:
+          type: string
+          format: date
+          description: Date de départ
+          example: '2019-01-01'
+    Booking:
+      type: object
+      required: [firstname, lastname, totalprice, depositpaid, bookingdates, additionalneeds]
+      properties:
+        firstname:
+          type: string
+          description: Prénom du client
+          example: Jim
+        lastname:
+          type: string
+          description: Nom du client
+          example: Brown
+        totalprice:
+          type: number
+          description: Prix total du séjour
+          example: 111
+        depositpaid:
+          type: boolean
+          description: Acompte versé ou non
+          example: true
+        bookingdates:
+          $ref: '#/components/schemas/BookingDates'
+        additionalneeds:
+          type: string
+          description: Demandes particulières du client
+          example: Breakfast
+    PartialBooking:
+      type: object
+      description: Sous-ensemble des champs d'une réservation ; tous sont optionnels
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        totalprice:
+          type: number
+        depositpaid:
+          type: boolean
+        bookingdates:
+          type: object
+          properties:
+            checkin:
+              type: string
+              format: date
+            checkout:
+              type: string
+              format: date
+        additionalneeds:
+          type: string
+    CreatedBooking:
+      type: object
+      required: [bookingid, booking]
+      properties:
+        bookingid:
+          type: integer
+          description: Identifiant attribué à la réservation
+          example: 1
+        booking:
+          $ref: '#/components/schemas/Booking'
