@@ -1,0 +1,10 @@
+name: Restful Booker — Démo
+values:
+  - key: baseUrl
+    value: 'https://restful-booker.herokuapp.com'
+  - key: username
+    value: admin
+  - key: password
+    value: password123
+  - key: maxResponseTime
+    value: '3000'

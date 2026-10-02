@@ -1,0 +1,3 @@
+$kind: collection
+description: Disponibilité de l'API et obtention du jeton (US-01, US-02).
+order: 1000

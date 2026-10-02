@@ -1,0 +1,25 @@
+$kind: http-request
+description: "US-09 · CT-40 — Attendu : 400."
+url: "{{baseUrl}}/booking/{{bookingIdNeg}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  Cookie: token={{token}}
+body:
+  type: json
+  content: |-
+    {
+      "bookingdates": {
+        "checkin": "2026-11-10",
+        "checkout": "2026-11-01"
+      }
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test(`[BUG-05 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {
+          pm.expect(pm.response.code, "BUG-05 semble corrigé : retirer le marquage d'anomalie connue").to.not.eql(400);
+      });
+    language: text/javascript
+order: 26000

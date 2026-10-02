@@ -1,0 +1,3 @@
+$kind: collection
+description: Recherche par nom et par dates (US-06, US-07). Les filtres de dates sont combinés au prénom unique pour isoler les données.
+order: 3000

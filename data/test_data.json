@@ -1,0 +1,85 @@
+{
+  "configuration": {
+    "base_url": "https://restful-booker.herokuapp.com",
+    "identifiants": {
+      "username": "admin",
+      "password": "password123"
+    },
+    "timeout_s": 30,
+    "pause_entre_requetes_s": 0.3,
+    "temps_reponse_max_ms": 3000
+  },
+
+  "reservation_valide": {
+    "firstname": "Pytest",
+    "lastname": "Reservation",
+    "totalprice": 150,
+    "depositpaid": true,
+    "bookingdates": {
+      "checkin": "2026-11-01",
+      "checkout": "2026-11-05"
+    },
+    "additionalneeds": "Petit-déjeuner"
+  },
+
+  "reservation_modifiee": {
+    "totalprice": 200,
+    "depositpaid": false,
+    "bookingdates": {
+      "checkin": "2026-12-01",
+      "checkout": "2026-12-04"
+    },
+    "additionalneeds": "Dîner"
+  },
+
+  "modification_partielle": {
+    "additionalneeds": "Vue sur mer"
+  },
+
+  "identifiant_inexistant": 999999999,
+  "jeton_invalide": "jetonInvalide123",
+  "mot_de_passe_invalide": "mauvaisMotDePasse",
+
+  "authentification_invalide": [
+    {"id": "mot-de-passe-incorrect", "ct": "CT-03", "corps": {"username": "admin", "password": "mauvaisMotDePasse"}, "code_attendu": 401, "bug": "BUG-01"},
+    {"id": "corps-vide", "ct": "CT-04", "corps": {}, "code_attendu": 400, "bug": "BUG-01"},
+    {"id": "sans-mot-de-passe", "ct": "CT-05", "corps": {"username": "admin"}, "code_attendu": 400, "bug": "BUG-01"}
+  ],
+
+  "champs_obligatoires": [
+    {"champ": "firstname", "ct": "CT-08", "bug": "BUG-02"},
+    {"champ": "lastname", "ct": "CT-09", "bug": "BUG-02"},
+    {"champ": "totalprice", "ct": "CT-10", "bug": "BUG-02"},
+    {"champ": "depositpaid", "ct": "CT-11", "bug": "BUG-02"},
+    {"champ": "bookingdates", "ct": "CT-12", "bug": "BUG-02"},
+    {"champ": "additionalneeds", "ct": "CT-13", "bug": "BUG-10"}
+  ],
+
+  "valeurs_invalides": [
+    {"id": "totalprice-texte", "ct": "CT-14", "surcharge": {"totalprice": "cent"}, "bug": "BUG-03"},
+    {"id": "firstname-numerique", "ct": "CT-15", "surcharge": {"firstname": 123}, "bug": "BUG-02"},
+    {"id": "depositpaid-chaine-false", "ct": "CT-16", "surcharge": {"depositpaid": "false"}, "bug": "BUG-04"},
+    {"id": "depart-avant-arrivee", "ct": "CT-17", "surcharge": {"bookingdates": {"checkin": "2026-11-10", "checkout": "2026-11-01"}}, "bug": "BUG-05"},
+    {"id": "depart-egal-arrivee", "ct": "CT-18", "surcharge": {"bookingdates": {"checkin": "2026-11-10", "checkout": "2026-11-10"}}, "bug": "BUG-05"},
+    {"id": "date-non-valide", "ct": "CT-19", "surcharge": {"bookingdates": {"checkin": "pas-une-date", "checkout": "2026-11-05"}}, "bug": "BUG-06"},
+    {"id": "date-inexistante-30-fevrier", "ct": "CT-20", "surcharge": {"bookingdates": {"checkin": "2026-02-30", "checkout": "2026-03-05"}}, "bug": "BUG-07"},
+    {"id": "prix-negatif", "ct": "CT-21", "surcharge": {"totalprice": -50}, "bug": "BUG-08"},
+    {"id": "prenom-vide", "ct": "CT-22", "surcharge": {"firstname": ""}, "bug": "BUG-09"}
+  ],
+
+  "json_mal_forme": "{\"firstname\": \"Pytest\",",
+
+  "filtres_dates": {
+    "commentaire": "Réservation de référence : arrivée le 2026-11-01, départ le 2026-11-05 (voir reservation_valide)",
+    "cas": [
+      {"id": "checkin-veille-arrivee", "ct": "CT-31", "parametres": {"checkin": "2026-10-31"}, "doit_contenir": true},
+      {"id": "checkin-jour-arrivee", "ct": "CT-30", "parametres": {"checkin": "2026-11-01"}, "doit_contenir": true, "bug": "BUG-12"},
+      {"id": "checkin-lendemain-arrivee", "ct": "CT-53", "parametres": {"checkin": "2026-11-02"}, "doit_contenir": false},
+      {"id": "checkout-jour-depart", "ct": "CT-32", "parametres": {"checkout": "2026-11-05"}, "doit_contenir": true},
+      {"id": "checkout-veille-depart", "ct": "CT-51", "parametres": {"checkout": "2026-11-04"}, "doit_contenir": true, "bug": "BUG-13"},
+      {"id": "checkout-lendemain-depart", "ct": "CT-52", "parametres": {"checkout": "2026-11-06"}, "doit_contenir": false, "bug": "BUG-13"}
+    ]
+  },
+
+  "filtre_date_invalide": {"checkin": "date-invalide"}
+}

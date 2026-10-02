@@ -1,0 +1,20 @@
+$kind: http-request
+description: US-07 · CT-32 — 05/11 ≥ 05/11.
+url: "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkout=2026-11-05"
+method: GET
+queryParams:
+  firstname: "{{prenomFiltre}}"
+  checkout: 2026-11-05
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 200", () => pm.response.to.have.status(200));
+      pm.test("Schéma JSON valide (schemaListeIds)", () => {
+          pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get("schemaListeIds")));
+      });
+      pm.test("Le résultat contient la réservation de test", () => {
+          const ids = pm.response.json().map(r => r.bookingid);
+          pm.expect(ids).to.include(Number(pm.collectionVariables.get("bookingIdFiltre")));
+      });
+    language: text/javascript
+order: 8000

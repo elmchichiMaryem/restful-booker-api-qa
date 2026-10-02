@@ -1,0 +1,38 @@
+$kind: http-request
+description: "US-08 · CT-37 — Attendu : 400, réservation inchangée."
+url: "{{baseUrl}}/booking/{{bookingIdNeg}}"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  Cookie: token={{token}}
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "{{prenomNeg}}",
+      "totalprice": 150,
+      "depositpaid": true,
+      "bookingdates": {
+        "checkin": "2026-11-01",
+        "checkout": "2026-11-05"
+      },
+      "additionalneeds": "Petit-déjeuner"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 400", () => pm.response.to.have.status(400));
+      // Vérifie par relecture que la réservation n'a pas été modifiée ni supprimée
+      pm.sendRequest({
+          url: `${pm.environment.get("baseUrl")}/booking/${pm.collectionVariables.get("bookingIdNeg")}`,
+          method: "GET",
+          header: { Accept: "application/json" }
+      }, (err, res) => {
+          pm.test("La réservation est inchangée", () => {
+              pm.expect(res.code).to.eql(200);
+              pm.expect(res.json()).to.eql(JSON.parse(pm.collectionVariables.get("reservationNeg")));
+          });
+      });
+    language: text/javascript
+order: 25000

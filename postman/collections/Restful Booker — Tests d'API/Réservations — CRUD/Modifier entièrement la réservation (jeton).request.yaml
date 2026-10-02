@@ -1,0 +1,35 @@
+$kind: http-request
+description: US-08 · CT-34 — Authentification par jeton en cookie.
+url: "{{baseUrl}}/booking/{{bookingId}}"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  Cookie: token={{token}}
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "{{prenomCrud}}Modifie",
+      "lastname": "{{nomCrud}}",
+      "totalprice": 200,
+      "depositpaid": false,
+      "bookingdates": {
+        "checkin": "2026-12-01",
+        "checkout": "2026-12-04"
+      },
+      "additionalneeds": "Dîner"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 200", () => pm.response.to.have.status(200));
+      pm.test("Schéma JSON valide (schemaReservation)", () => {
+          pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get("schemaReservation")));
+      });
+      pm.test("La réponse contient les valeurs envoyées", () => {
+          pm.expect(pm.response.json()).to.eql(JSON.parse(pm.variables.replaceIn(pm.request.body.raw)));
+      });
+      pm.collectionVariables.set("reservationCrud", JSON.stringify(pm.response.json()));
+    language: text/javascript
+order: 4000

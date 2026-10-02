@@ -1,0 +1,14 @@
+$kind: http-request
+description: "US-10 · CT-49 — Attendu : 404."
+url: "{{baseUrl}}/booking/{{idInexistant}}"
+method: DELETE
+headers:
+  Cookie: token={{token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test(`[BUG-14 — anomalie connue] Code HTTP attendu 404 (obtenu : ${pm.response.code})`, () => {
+          pm.expect(pm.response.code, "BUG-14 semble corrigé : retirer le marquage d'anomalie connue").to.not.eql(404);
+      });
+    language: text/javascript
+order: 29000

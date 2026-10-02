@@ -1,0 +1,22 @@
+$kind: http-request
+description: "US-02 · CT-03 — Attendu : 401 sans jeton."
+url: "{{baseUrl}}/auth"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "username": "{{username}}",
+      "password": "{{motDePasseInvalide}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Aucun jeton n'est délivré", () => pm.expect(pm.response.json()).to.not.have.property("token"));
+      pm.test(`[BUG-01 — anomalie connue] Code HTTP attendu 401 (obtenu : ${pm.response.code})`, () => {
+          pm.expect(pm.response.code, "BUG-01 semble corrigé : retirer le marquage d'anomalie connue").to.not.eql(401);
+      });
+    language: text/javascript
+order: 2000

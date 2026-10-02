@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reservation.json",
+  "title": "Réservation (réponse de GET, PUT et PATCH /booking/{id})",
+  "type": "object",
+  "required": ["firstname", "lastname", "totalprice", "depositpaid", "bookingdates", "additionalneeds"],
+  "additionalProperties": false,
+  "properties": {
+    "firstname": {"type": "string"},
+    "lastname": {"type": "string"},
+    "totalprice": {"type": "number"},
+    "depositpaid": {"type": "boolean"},
+    "bookingdates": {
+      "type": "object",
+      "required": ["checkin", "checkout"],
+      "additionalProperties": false,
+      "properties": {
+        "checkin": {"type": "string", "format": "date"},
+        "checkout": {"type": "string", "format": "date"}
+      }
+    },
+    "additionalneeds": {"type": "string"}
+  }
+}

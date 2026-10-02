@@ -1,0 +1,30 @@
+$kind: http-request
+description: "US-08 · CT-36 — Attendu : 404."
+url: "{{baseUrl}}/booking/{{idInexistant}}"
+method: PUT
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  Cookie: token={{token}}
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "{{prenomNeg}}",
+      "lastname": "{{nomNeg}}",
+      "totalprice": 150,
+      "depositpaid": true,
+      "bookingdates": {
+        "checkin": "2026-11-01",
+        "checkout": "2026-11-05"
+      },
+      "additionalneeds": "Petit-déjeuner"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test(`[BUG-14 — anomalie connue] Code HTTP attendu 404 (obtenu : ${pm.response.code})`, () => {
+          pm.expect(pm.response.code, "BUG-14 semble corrigé : retirer le marquage d'anomalie connue").to.not.eql(404);
+      });
+    language: text/javascript
+order: 27000

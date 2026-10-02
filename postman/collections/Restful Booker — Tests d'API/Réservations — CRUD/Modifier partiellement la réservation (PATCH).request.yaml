@@ -1,0 +1,28 @@
+$kind: http-request
+description: US-09 · CT-38 — Seul le champ envoyé doit changer.
+url: "{{baseUrl}}/booking/{{bookingId}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Accept: application/json
+  Cookie: token={{token}}
+body:
+  type: json
+  content: |-
+    {
+      "additionalneeds": "Vue sur mer"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 200", () => pm.response.to.have.status(200));
+      pm.test("Schéma JSON valide (schemaReservation)", () => {
+          pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get("schemaReservation")));
+      });
+      pm.test("Seul additionalneeds est modifié", () => {
+          const attendu = { ...JSON.parse(pm.collectionVariables.get("reservationCrud")), additionalneeds: "Vue sur mer" };
+          pm.expect(pm.response.json()).to.eql(attendu);
+      });
+      pm.collectionVariables.set("reservationCrud", JSON.stringify(pm.response.json()));
+    language: text/javascript
+order: 6000

@@ -1,0 +1,13 @@
+$kind: http-request
+description: US-10 · CT-48 — Code 201 documenté par l'API.
+url: "{{baseUrl}}/booking/{{bookingId}}"
+method: DELETE
+headers:
+  Cookie: token={{token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 201", () => pm.response.to.have.status(201));
+      pm.test("Corps de réponse : Created", () => pm.expect(pm.response.text()).to.eql("Created"));
+    language: text/javascript
+order: 8000

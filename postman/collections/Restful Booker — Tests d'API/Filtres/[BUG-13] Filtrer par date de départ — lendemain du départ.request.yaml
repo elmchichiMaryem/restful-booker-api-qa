@@ -1,0 +1,21 @@
+$kind: http-request
+description: "US-07 · CT-52 — Attendu : non renvoyée (05/11 < 06/11)."
+url: "{{baseUrl}}/booking?firstname={{prenomFiltre}}&checkout=2026-11-06"
+method: GET
+queryParams:
+  firstname: "{{prenomFiltre}}"
+  checkout: 2026-11-06
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Code HTTP 200", () => pm.response.to.have.status(200));
+      pm.test("Schéma JSON valide (schemaListeIds)", () => {
+          pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get("schemaListeIds")));
+      });
+      pm.test("[BUG-13 — anomalie connue] La réservation ne devrait pas être renvoyée (départ < date du filtre)", () => {
+          const ids = pm.response.json().map(r => r.bookingid);
+          const attenduRespecte = ids.includes(Number(pm.collectionVariables.get("bookingIdFiltre"))) === false;
+          pm.expect(attenduRespecte, "BUG-13 semble corrigé : retirer le marquage d'anomalie connue").to.be.false;
+      });
+    language: text/javascript
+order: 10000

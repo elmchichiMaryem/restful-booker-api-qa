@@ -1,0 +1,41 @@
+$kind: http-request
+description: "US-03 · CT-22 — Attendu : 400."
+url: "{{baseUrl}}/booking"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstname": "",
+      "lastname": "{{nomNeg}}",
+      "totalprice": 150,
+      "depositpaid": true,
+      "bookingdates": {
+        "checkin": "2026-11-01",
+        "checkout": "2026-11-05"
+      },
+      "additionalneeds": "Petit-déjeuner"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test(`[BUG-09 — anomalie connue] Code HTTP attendu 400 (obtenu : ${pm.response.code})`, () => {
+          pm.expect(pm.response.code, "BUG-09 semble corrigé : retirer le marquage d'anomalie connue").to.not.eql(400);
+      });
+      // Si l'API a créé une réservation à tort, on la supprime immédiatement (données isolées)
+      let corpsCree = null;
+      try { corpsCree = pm.response.json(); } catch (e) { /* corps non JSON : rien n'a été créé */ }
+      if (corpsCree && corpsCree.bookingid) {
+          pm.sendRequest({
+              url: `${pm.environment.get("baseUrl")}/booking/${corpsCree.bookingid}`,
+              method: "DELETE",
+              header: { Cookie: `token=${pm.collectionVariables.get("token")}` }
+          }, (err, res) => {
+              pm.test("Nettoyage : réservation créée à tort supprimée", () => pm.expect(res.code).to.eql(201));
+          });
+      }
+    language: text/javascript
+order: 13000

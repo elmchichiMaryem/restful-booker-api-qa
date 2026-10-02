@@ -122,7 +122,7 @@ La **sévérité** mesure l'impact technique. La **priorité** mesure l'urgence 
 | Données modifiées par d'autres utilisateurs | Données uniques et isolées, vérification par relecture |
 | API lente au réveil (hébergement gratuit) | Délai d'attente de 30 s, appel `/ping` préalable |
 | Surcharge de l'API partagée | Pauses entre requêtes, k6 plafonné à 5 utilisateurs virtuels pendant 30 s et déclenché manuellement |
-| Faux positifs dus à l'environnement | Toute anomalie est rejouée au moins deux fois avant d'être documentée |
+| Faux positifs dus à l'environnement (réinitialisation périodique de la base, observée entre deux campagnes) | Toute anomalie est rejouée au moins deux fois avant d'être documentée ; en automatisation, un test en échec est relancé une seule fois (`pytest-rerunfailures`) : une vraie anomalie, déterministe, échoue aussi à la relance |
 
 ## 9. Livrables QA
 
@@ -131,6 +131,6 @@ La **sévérité** mesure l'impact technique. La **priorité** mesure l'urgence 
 | Stratégie de test | ce document |
 | Cas de test et résultats d'exécution | [02_cas_de_test.md](02_cas_de_test.md) |
 | Rapports d'anomalies | [03_rapports_anomalies.md](03_rapports_anomalies.md) |
-| Matrice de traçabilité | `04_matrice_tracabilite.md` (Phase 4) |
+| Matrice de traçabilité | [04_matrice_tracabilite.md](04_matrice_tracabilite.md) |
 | Rapport de performance | `05_rapport_performance.md` (Phase 5) |
 | Bilan de test | `06_bilan_de_test.md` (Phase 6) |

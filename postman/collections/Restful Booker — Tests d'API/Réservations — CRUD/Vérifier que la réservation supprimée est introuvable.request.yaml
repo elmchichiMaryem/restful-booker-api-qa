@@ -1,0 +1,11 @@
+$kind: http-request
+description: US-10 · CT-48 — Suppression effective.
+url: "{{baseUrl}}/booking/{{bookingId}}"
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: afterResponse
+    code: pm.test("Code HTTP 404", () => pm.response.to.have.status(404));
+    language: text/javascript
+order: 9000
