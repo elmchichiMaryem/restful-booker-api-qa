@@ -21,5 +21,6 @@ reports/
 # Secrets éventuels
 .env
 
-# Dossiers générés par l'application Postman (workspace local)
-postman/globals/
+# Dossiers générés par l'application Postman (workspace local, format YAML de synchronisation)
+# Les fichiers de référence du projet sont les deux JSON à la racine de postman/
+postman/*/
