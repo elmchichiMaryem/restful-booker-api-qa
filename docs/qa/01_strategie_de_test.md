@@ -133,5 +133,5 @@ La **sévérité** mesure l'impact technique. La **priorité** mesure l'urgence 
 | Cas de test et résultats d'exécution | [02_cas_de_test.md](02_cas_de_test.md) |
 | Rapports d'anomalies | [03_rapports_anomalies.md](03_rapports_anomalies.md) |
 | Matrice de traçabilité | [04_matrice_tracabilite.md](04_matrice_tracabilite.md) |
-| Rapport de performance | `05_rapport_performance.md` (Phase 5) |
+| Rapport de performance | [05_rapport_performance.md](05_rapport_performance.md) |
 | Bilan de test | `06_bilan_de_test.md` (Phase 6) |
