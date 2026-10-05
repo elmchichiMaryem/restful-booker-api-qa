@@ -131,6 +131,12 @@ Constats :
 - Le jeton est une chaîne hexadécimale courte (15 caractères observés, par exemple
   `16dd74f59f0f807`).
 - La documentation n'indique ni la durée de validité du jeton, ni la façon de le révoquer.
+- **Réinitialisations de l'environnement** (mesure du 05/10/2026) : l'API publique se réinitialise
+  complètement à intervalle irrégulier de quelques minutes (purges observées vers 14:47, 14:52 et
+  15:01). Toutes les réservations sont effacées (la numérotation repart de 1) et **tous les jetons
+  sont invalidés**. Un jeton n'a donc pas de durée de vie garantie, et ses opérations protégées
+  renvoient alors 403. Il ne s'agit pas d'une anomalie, mais d'une contrainte de l'environnement
+  de démonstration, prise en compte par les suites automatisées.
 - Les identifiants de démonstration sont publiés dans la documentation : c'est normal pour une
   API de démonstration, inacceptable en production.
 

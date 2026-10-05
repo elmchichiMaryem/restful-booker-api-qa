@@ -122,7 +122,8 @@ La **sévérité** mesure l'impact technique. La **priorité** mesure l'urgence 
 | Données modifiées par d'autres utilisateurs | Données uniques et isolées, vérification par relecture |
 | API lente au réveil (hébergement gratuit) | Délai d'attente de 30 s, appel `/ping` préalable |
 | Surcharge de l'API partagée | Pauses entre requêtes, k6 plafonné à 5 utilisateurs virtuels pendant 30 s et déclenché manuellement |
-| Faux positifs dus à l'environnement (réinitialisation périodique de la base, observée entre deux campagnes) | Toute anomalie est rejouée au moins deux fois avant d'être documentée ; en automatisation, un test en échec est relancé une seule fois (`pytest-rerunfailures`) : une vraie anomalie, déterministe, échoue aussi à la relance |
+| Réinitialisation complète de l'API toutes les quelques minutes : réservations effacées **et jetons invalidés** (mesurée le 05/10/2026, voir [l'analyse de l'API](../ba/02_analyse_api.md) §4) | Jeton frais pour chaque requête ou test protégé (script commun Postman, fixture `token` par test en pytest) ; suppressions de nettoyage en Basic Auth, indépendantes des jetons ; relance unique en cas d'échec (`npm run test:postman`, `pytest-rerunfailures`) : une vraie anomalie, déterministe, échoue aussi à la relance |
+| Faux positifs dus à l'environnement | Toute anomalie est rejouée au moins deux fois avant d'être documentée |
 
 ## 9. Livrables QA
 

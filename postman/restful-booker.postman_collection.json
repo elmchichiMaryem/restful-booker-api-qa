@@ -2,13 +2,40 @@
   "info": {
     "_postman_id": "ff78ed65-ff49-5807-99c4-35fecbc25291",
     "name": "Restful Booker — Tests d'API",
-    "description": "Collection de tests de l'API Restful Booker (https://restful-booker.herokuapp.com).\n\n**Exécution** : lancer la collection entière, dans l'ordre, avec l'environnement « Restful Booker — Démo ». Le jeton et les identifiants de réservation sont enregistrés dans des variables de collection et réutilisés par les requêtes suivantes.\n\n**Données isolées** : chaque dossier crée ses propres réservations (prénom unique) et les supprime à la fin.\n\n**Anomalies connues** : les tests préfixés `[BUG-xx — anomalie connue]` vérifient le comportement *attendu*. Ils réussissent tant que l'anomalie est présente et échouent dès qu'elle est corrigée, pour signaler qu'il faut mettre à jour la collection. Voir docs/qa/03_rapports_anomalies.md.",
+    "description": "Collection de tests de l'API Restful Booker (https://restful-booker.herokuapp.com).\n\n**Exécution** : lancer la collection entière, dans l'ordre, avec l'environnement « Restful Booker — Démo ». Le jeton et les identifiants de réservation sont enregistrés dans des variables de collection et réutilisés par les requêtes suivantes.\n\n**Données isolées** : chaque dossier crée ses propres réservations (prénom unique) et les supprime à la fin.\n\n**Anomalies connues** : les tests préfixés `[BUG-xx — anomalie connue]` vérifient le comportement *attendu*. Ils réussissent tant que l'anomalie est présente et échouent dès qu'elle est corrigée, pour signaler qu'il faut mettre à jour la collection. Voir docs/qa/03_rapports_anomalies.md.\n\n**Réinitialisations de l'API** : l'API publique efface périodiquement toutes ses réservations et tous ses jetons. Un script commun redemande donc un jeton avant chaque requête qui utilise `{{token}}` (au-delà de `dureeMaxJetonS` secondes, 0 = toujours), et les suppressions de nettoyage utilisent Basic Auth, qui ne dépend d'aucun jeton.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "noauth"
   },
   "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// L'API publique purge périodiquement TOUS ses jetons (constat du 05/10/2026) : un jeton obtenu",
+          "// en début d'exécution peut être refusé (403) peu après. Avant chaque requête qui utilise",
+          "// {{token}}, on redemande un jeton s'il est absent ou plus vieux que dureeMaxJetonS (environnement).",
+          "const enTeteCookie = pm.request.headers.get(\"Cookie\") || \"\";",
+          "const ageJetonMs = Date.now() - Number(pm.collectionVariables.get(\"jetonObtenuLe\") || 0);",
+          "const dureeMaxMs = Number(pm.environment.get(\"dureeMaxJetonS\") || 0) * 1000;",
+          "if (enTeteCookie.includes(\"{{token}}\") && (!pm.collectionVariables.get(\"token\") || ageJetonMs >= dureeMaxMs)) {",
+          "    pm.sendRequest({",
+          "        url: `${pm.environment.get(\"baseUrl\")}/auth`,",
+          "        method: \"POST\",",
+          "        header: { \"Content-Type\": \"application/json\" },",
+          "        body: { mode: \"raw\", raw: JSON.stringify({ username: pm.environment.get(\"username\"), password: pm.environment.get(\"password\") }) }",
+          "    }, (err, res) => {",
+          "        if (!err && res.code === 200 && res.json().token) {",
+          "            pm.collectionVariables.set(\"token\", res.json().token);",
+          "            pm.collectionVariables.set(\"jetonObtenuLe\", Date.now());",
+          "        }",
+          "    });",
+          "}"
+        ]
+      }
+    },
     {
       "listen": "test",
       "script": {
@@ -63,6 +90,11 @@
     },
     {
       "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "jetonObtenuLe",
       "value": "",
       "type": "string"
     },
@@ -184,7 +216,8 @@
                   "    pm.response.to.have.jsonSchema(JSON.parse(pm.collectionVariables.get(\"schemaJeton\")));",
                   "});",
                   "pm.test(\"Le jeton est une chaîne non vide\", () => pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty);",
-                  "pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                  "pm.collectionVariables.set(\"token\", pm.response.json().token);",
+                  "pm.collectionVariables.set(\"jetonObtenuLe\", Date.now());"
                 ]
               }
             }
@@ -1250,12 +1283,7 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "token={{token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/booking/{{bookingIdFiltre}}",
               "host": [
@@ -1266,7 +1294,22 @@
                 "{{bookingIdFiltre}}"
               ]
             },
-            "description": "Suppression des données de test."
+            "description": "Suppression des données de test (Basic Auth : indépendante des jetons).",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]
@@ -1450,7 +1493,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1510,7 +1555,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1570,7 +1617,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1630,7 +1679,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1690,7 +1741,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1750,7 +1803,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1810,7 +1865,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1870,7 +1927,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1930,7 +1989,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -1990,7 +2051,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -2050,7 +2113,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -2109,7 +2174,9 @@
                   "    pm.sendRequest({",
                   "        url: `${pm.environment.get(\"baseUrl\")}/booking/${corpsCree.bookingid}`,",
                   "        method: \"DELETE\",",
-                  "        header: { Cookie: `token=${pm.collectionVariables.get(\"token\")}` }",
+                  "        // Basic Auth : la suppression ne dépend d'aucun jeton (l'API purge périodiquement ses jetons)",
+                  "        header: { Authorization: \"Basic \" + CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(",
+                  "            `${pm.environment.get(\"username\")}:${pm.environment.get(\"password\")}`)) }",
                   "    }, (err, res) => {",
                   "        pm.test(\"Nettoyage : réservation créée à tort supprimée\", () => pm.expect(res.code).to.eql(201));",
                   "    });",
@@ -2917,12 +2984,7 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Cookie",
-                "value": "token={{token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/booking/{{bookingIdNeg}}",
               "host": [
@@ -2933,7 +2995,22 @@
                 "{{bookingIdNeg}}"
               ]
             },
-            "description": "Suppression des données de test."
+            "description": "Suppression des données de test (Basic Auth : indépendante des jetons).",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         }
       ]

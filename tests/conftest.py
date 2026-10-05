@@ -30,9 +30,12 @@ def identifiants_admin(configuration) -> tuple[str, str]:
     return configuration["identifiants"]["username"], configuration["identifiants"]["password"]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def token(client, configuration) -> str:
-    """Jeton d'authentification, obtenu une seule fois pour toute la session de test."""
+    """Jeton d'authentification frais, obtenu pour chaque test.
+
+    L'API publique purge périodiquement tous ses jetons (constat du 05/10/2026, voir la
+    stratégie de test) : un jeton partagé par toute la session finirait par être refusé (403)."""
     reponse = client.create_token(configuration["identifiants"])
     assert reponse.status_code == 200, f"Impossible d'obtenir un jeton : {reponse.status_code} {reponse.text}"
     return reponse.json()["token"]
@@ -51,11 +54,12 @@ def reservation_unique(donnees) -> dict:
 
 
 @pytest.fixture
-def nettoyage(client, token):
+def nettoyage(client, identifiants_admin):
     """Registre des réservations à supprimer après le test.
 
     Utilisé notamment par les cas négatifs : si l'API crée une réservation à tort, elle est
-    enregistrée ici et supprimée au démontage, que le test réussisse ou non."""
+    enregistrée ici et supprimée au démontage, que le test réussisse ou non. La suppression
+    utilise Basic Auth, qui ne dépend d'aucun jeton et résiste donc aux purges de jetons."""
     a_supprimer: list[int] = []
 
     def enregistrer(reponse):
@@ -68,20 +72,20 @@ def nettoyage(client, token):
 
     yield enregistrer
     for booking_id in a_supprimer:
-        client.delete_booking(booking_id, token=token)
+        client.delete_booking(booking_id, basic=identifiants_admin)
 
 
 @pytest.fixture
-def reservation(client, reservation_unique, token):
+def reservation(client, reservation_unique, identifiants_admin):
     """Crée une réservation avant le test et la supprime après.
 
     Renvoie un dictionnaire {"id": ..., "donnees": ...}. La suppression finale tolère que le
-    test ait déjà supprimé la réservation."""
+    test ait déjà supprimé la réservation ; elle utilise Basic Auth (insensible aux purges de jetons)."""
     reponse = client.create_booking(reservation_unique)
     assert reponse.status_code == 200, f"Préparation impossible : {reponse.status_code} {reponse.text}"
     booking_id = reponse.json()["bookingid"]
     yield {"id": booking_id, "donnees": reservation_unique}
-    client.delete_booking(booking_id, token=token)
+    client.delete_booking(booking_id, basic=identifiants_admin)
 
 
 # ---------------------------------------------------------------------- rapport HTML
