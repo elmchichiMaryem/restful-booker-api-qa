@@ -124,6 +124,23 @@ Exécution du 05/10/2026 avec les seuils actifs : **tous les seuils sont respect
 | Requêtes | 124 (3,7 requêtes/s) |
 | Données reçues | 1,4 Mo |
 
+### 5.1 Exécution en intégration continue
+
+Exécution manuelle du 05/10/2026 dans GitHub Actions
+([run 37316655044](https://github.com/elmchichiMaryem/restful-booker-api-qa/actions/runs/37316655044)) :
+**tous les seuils sont respectés**, avec 0 % d'erreur sur 132 requêtes.
+
+| Endpoint | Poste local (France) p95 | GitHub Actions p95 |
+|---|---|---|
+| `GET /booking` | 182 à 270 ms | 112 ms |
+| `POST /booking` | 90 ms | 38 ms |
+| `GET /booking/{id}` | 89 ms | 38 ms |
+
+Le temps des opérations unitaires est divisé par plus de deux quand le test s'exécute depuis
+l'infrastructure de GitHub, plus proche de l'hébergement de l'API. Cela **confirme que la latence
+réseau domine** les temps mesurés : le traitement côté serveur ne représente que quelques
+dizaines de millisecondes. Les seuils restent valables dans les deux contextes.
+
 ## 6. Interprétation
 
 1. **Les opérations unitaires sont rapides et très stables** : création et lecture autour de
