@@ -1,0 +1,101 @@
+name: Tests de l'API Restful Booker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Lancement manuel : tests fonctionnels + test de charge légère k6
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# L'API est publique et partagée : jamais deux exécutions en parallèle sur la même branche
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-fonctionnels:
+    name: pytest puis Newman
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+
+      - name: Installer Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Installer les dépendances Python
+        run: pip install -r requirements.txt
+
+      - name: Vérifier que l'API est disponible
+        run: curl --fail --silent --show-error --max-time 30 https://restful-booker.herokuapp.com/ping
+
+      - name: Tests pytest
+        run: pytest
+
+      - name: Installer Node.js
+        if: ${{ !cancelled() }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Installer Newman
+        if: ${{ !cancelled() }}
+        run: npm ci
+
+      # Lancé même si pytest échoue : les deux rapports sont toujours produits
+      - name: Collection Postman (Newman)
+        if: ${{ !cancelled() }}
+        run: npm run test:postman
+
+      - name: Publier le rapport pytest
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-pytest
+          path: reports/pytest/
+          if-no-files-found: warn
+
+      - name: Publier le rapport Newman
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-newman
+          path: reports/newman/
+          if-no-files-found: warn
+
+  performance:
+    name: Charge légère k6 (manuel)
+    # Jamais sur push ou pull request : pas de charge répétée sur l'API publique.
+    # Exécuté après les tests fonctionnels (jamais en parallèle sur l'API), même s'ils échouent.
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' }}
+    needs: tests-fonctionnels
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v7
+
+      - name: Installer k6
+        uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: "2.3.0"
+
+      - name: Test de charge légère (5 VU, 30 s)
+        run: npm run test:perf
+
+      - name: Publier le rapport k6
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-k6
+          path: reports/k6/
+          if-no-files-found: warn
